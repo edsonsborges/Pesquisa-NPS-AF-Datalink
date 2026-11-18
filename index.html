@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa NPS - AF Datalink | Excelência em Cabos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .score-btn {
+            transition: all 0.2s ease;
+        }
+        .score-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Barra de Navegação -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <!-- Identidade Visual AF Datalink -->
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col">
+                    <span class="text-2xl font-black tracking-tight text-[#004B87] flex items-center gap-1">
+                        DATA<span class="text-[#E31B23]">LINK</span>
+                    </span>
+                    <span class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Excelência em Cabos</span>
+                </div>
+            </div>
+
+            <!-- Alternador de Visualização -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl text-sm font-medium">
+                <button onclick="switchView('survey')" id="nav-survey" class="px-4 py-2 rounded-lg transition-all bg-white text-[#004B87] shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-clipboard-question mr-2"></i> Responder Pesquisa
+                </button>
+                <button onclick="switchView('admin')" id="nav-admin" class="px-4 py-2 rounded-lg transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
+                    <i class="fa-solid fa-chart-pie mr-2"></i> Painel de Gestão (Dashboard)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <!-- Notificação Toast -->
+        <div id="toast" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+            <span id="toast-message">Ação realizada com sucesso!</span>
+        </div>
+
+        <!-- TELA 1: FORMULÁRIO DE PESQUISA NPS -->
+        <div id="view-survey" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
+            <!-- Banner Superior -->
+            <div class="bg-gradient-to-r from-[#004B87] to-[#006bb3] p-6 text-white text-center relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-15 text-9xl">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold mb-2">Sua opinião move nossa inovação</h1>
+                <p class="text-blue-100 text-sm max-w-lg mx-auto">
+                    Ajude a AF Datalink a continuar oferecendo excelência em cabos e conexões. Sua avaliação leva menos de 1 minuto!
+                </p>
+            </div>
+
+            <!-- Formulário -->
+            <form id="nps-form" onsubmit="submitSurvey(event)" class="p-6 sm:p-8 space-y-6">
+                <!-- Nome -->
+                <div>
+                    <label for="resp-name" class="block text-sm font-semibold text-slate-700 mb-2">
+                        Nome <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="resp-name" required placeholder="Digite seu nome completo"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004B87] focus:bg-white text-sm">
+                    </div>
+                </div>
+
+                <!-- E-mail -->
+                <div>
+                    <label for="resp-email" class="block text-sm font-semibold text-slate-700 mb-2">
+                        E-mail <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" id="resp-email" required placeholder="seu.email@empresa.com"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004B87] focus:bg-white text-sm">
+                    </div>
+                </div>
+
+                <!-- Empresa / Setor -->
+                <div>
+                    <label for="resp-company" class="block text-sm font-semibold text-slate-700 mb-2">
+                        Empresa ou Segmento de Atuação
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-building"></i>
+                        </span>
+                        <input type="text" id="resp-company" placeholder="Ex: Produtora de Áudio, Locadora, Integrador..."
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004B87] focus:bg-white text-sm">
+                    </div>
+                </div>
+
+                <!-- Escala NPS 0 a 10 -->
+                <div class="pt-4 border-t border-slate-200">
+                    <label class="block text-base font-bold text-slate-900 mb-1 text-center sm:text-left">
+                        Quanto você recomendaria a Datalink para um amigo ou colega do setor? <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-xs text-slate-500 mb-4 text-center sm:text-left">Selecione uma nota de 0 (Não recomendaria) a 10 (Recomendaria com certeza)</p>
+
+                    <!-- Botões de Nota (0-10) -->
+                    <div class="grid grid-cols-6 sm:grid-cols-11 gap-2 my-4" id="score-container"></div>
+
+                    <div class="flex justify-between text-xs font-semibold text-slate-500 px-1">
+                        <span>0 - Não recomendaria</span>
+                        <span>10 - Recomendaria</span>
+                    </div>
+                </div>
+
+                <!-- Pergunta Aberta Complementar -->
+                <div class="pt-4 border-t border-slate-200">
+                    <label for="resp-comment" class="block text-sm font-semibold text-slate-700 mb-2" id="feedback-label">
+                        Tem algo que você esperava que fizéssemos, mas ainda não oferecemos? / Deixe seu comentário:
+                    </label>
+                    <textarea id="resp-comment" rows="4" placeholder="Conte-nos os detalhes da sua experiência, sugestões de novos produtos ou melhorias..."
+                        class="w-full p-4 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004B87] focus:bg-white text-sm"></textarea>
+                </div>
+
+                <!-- Botão Enviar -->
+                <button type="submit" class="w-full bg-gradient-to-r from-[#004B87] to-[#003666] hover:from-[#003666] hover:to-[#002244] text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar Avaliação
+                </button>
+            </form>
+
+            <!-- Tela de Agradecimento -->
+            <div id="success-screen" class="hidden p-12 text-center space-y-6">
+                <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">Muito obrigado pela sua avaliação!</h2>
+                <p class="text-slate-600 max-w-md mx-auto text-sm">
+                    Sua opinião é fundamental para a AF Datalink manter o padrão de excelência em cabos e atendimento. Seus dados foram registrados com sucesso.
+                </p>
+                <button onclick="resetSurvey()" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-6 rounded-xl transition-all text-sm cursor-pointer">
+                    <i class="fa-solid fa-rotate-left"></i> Enviar nova resposta
+                </button>
+            </div>
+        </div>
+
+        <!-- TELA 2: PAINEL DE GESTÃO (DASHBOARD) -->
+        <div id="view-admin" class="hidden space-y-6">
+            <!-- Banner de Alerta de Meta (80 pts) e Abertura de SACP -->
+            <div id="sacp-alert-banner" class="hidden rounded-2xl p-5 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm transition-all">
+                <div class="flex items-start gap-4">
+                    <div id="sacp-icon-box" class="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 id="sacp-title" class="font-bold text-base">Atenção: NPS Abaixo da Meta (80 pontos)</h3>
+                        <p id="sacp-desc" class="text-sm mt-1">
+                            O índice atual está abaixo do objetivo estabelecido de <strong>80 pontos</strong>. De acordo com o procedimento da qualidade, é obrigatória a <strong>abertura de uma SACP (Solicitação de Ação Corretiva e Preventiva)</strong> para análise de causa raiz e plano de ação.
+                        </p>
+                    </div>
+                </div>
+                <span id="sacp-badge" class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0">
+                    Abrir SACP
+                </span>
+            </div>
+
+            <!-- Cartões de Métricas Principais -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">NPS Score Geral</span>
+                            <span class="text-[11px] font-bold text-[#004B87] bg-blue-50 px-2 py-0.5 rounded">Meta: 80</span>
+                        </div>
+                        <div class="text-4xl font-extrabold text-[#004B87] mt-2 flex items-baseline gap-2" id="stat-nps">
+                            --
+                        </div>
+                    </div>
+                    <span class="text-xs text-emerald-600 font-semibold mt-4 bg-emerald-50 px-2.5 py-1 rounded-md inline-block w-fit" id="stat-zone">
+                        Calculando...
+                    </span>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total de Respostas</span>
+                        <div class="text-3xl font-bold text-slate-800 mt-2" id="stat-total">0</div>
+                    </div>
+                    <span class="text-xs text-slate-500 mt-4">Respostas coletadas</span>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Promotores (9-10)</span>
+                        <div class="text-3xl font-bold text-emerald-600 mt-2" id="stat-promoters">0%</div>
+                    </div>
+                    <span class="text-xs text-emerald-600 mt-4">Clientes leais e defensores</span>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Detratores (0-6)</span>
+                        <div class="text-3xl font-bold text-red-600 mt-2" id="stat-detractors">0%</div>
+                    </div>
+                    <span class="text-xs text-red-600 mt-4">Requer atenção imediata</span>
+                </div>
+            </div>
+
+            <!-- Gráfico de Distribuição e Classificação -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm md:col-span-2 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-bar text-[#004B87]"></i> Distribuição de Notas & Evolução vs Meta
+                        </h3>
+                        <span class="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                            <span class="w-3 h-0.5 bg-red-600 inline-block border-t-2 border-dashed border-red-600"></span> Linha de Meta: 80 pts (Abaixo = Abrir SACP)
+                        </span>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="npsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-pie-chart text-[#004B87]"></i> Classificação
+                    </h3>
+                    <div class="space-y-4 my-auto">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 font-medium">
+                                <span class="text-emerald-700">Promotores (9-10)</span>
+                                <span id="pct-prom">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="bar-prom" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 font-medium">
+                                <span class="text-amber-600">Neutros (7-8)</span>
+                                <span id="pct-neut">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="bar-neut" class="bg-amber-400 h-full rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1 font-medium">
+                                <span class="text-red-600">Detratores (0-6)</span>
+                                <span id="pct-det">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="bar-det" class="bg-red-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex gap-2">
+                        <button onclick="resetData()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-lg transition-all cursor-pointer">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Limpar Dados
+                        </button>
+                        <button onclick="loadDemoData()" class="w-full bg-[#004B87] hover:bg-[#003666] text-white text-xs font-semibold py-2.5 px-3 rounded-lg transition-all cursor-pointer">
+                            <i class="fa-solid fa-database mr-1"></i> Carregar Amostra
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Desempenho Mensal -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-[#004B87]"></i> Desempenho Mensal do NPS (Evolução Histórica)
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Acompanhamento mensal da pontuação NPS em relação à meta de 80 pontos (meses abaixo da linha vermelha exigem abertura de SACP).</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs font-medium text-slate-600">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Meta Atingida (≥ 80)
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block"></span> Abaixo da Meta (Abrir SACP)
+                        </span>
+                    </div>
+                </div>
+                <div class="h-64 relative w-full">
+                    <canvas id="monthlyNpsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Análise por Pesquisa: E-mails Enviados vs. Pesquisas Respondidas -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-envelope-open-text text-[#004B87]"></i> Análise por Pesquisa: E-mails Enviados vs. Respondidos
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Acompanhe a taxa de engajamento e conversão de respostas sobre o total de disparos realizados.</p>
+                    </div>
+                    <!-- Controle para ajustar quantidade de e-mails enviados -->
+                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <label for="input-emails-sent" class="text-xs font-semibold text-slate-600 whitespace-nowrap pl-1">
+                            E-mails Enviados:
+                        </label>
+                        <input type="number" id="input-emails-sent" min="0" value="40" onchange="updateEmailsSent()"
+                            class="w-20 px-2.5 py-1.5 text-sm font-bold text-[#004B87] bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004B87]">
+                        <button onclick="updateEmailsSent()" class="bg-[#004B87] hover:bg-[#003666] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- Gráfico de Pizza -->
+                    <div class="h-60 relative flex items-center justify-center">
+                        <canvas id="responseRatePieChart"></canvas>
+                    </div>
+
+                    <!-- Resumo Numérico da Análise -->
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-blue-50/70 border border-blue-100 p-4 rounded-xl">
+                                <span class="text-xs font-bold uppercase tracking-wider text-blue-800">Total Disparado</span>
+                                <div class="text-2xl font-extrabold text-[#004B87] mt-1" id="stat-emails-sent">40</div>
+                                <span class="text-[11px] text-blue-600">E-mails enviados</span>
+                            </div>
+                            <div class="bg-emerald-50/70 border border-emerald-100 p-4 rounded-xl">
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-800">Taxa de Resposta</span>
+                                <div class="text-2xl font-extrabold text-emerald-600 mt-1" id="stat-response-rate">25%</div>
+                                <span class="text-[11px] text-emerald-600">Adesão dos clientes</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2 text-xs text-slate-600">
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2 font-medium">
+                                    <span class="w-3 h-3 rounded-full bg-[#004B87] inline-block"></span> Pesquisas Respondidas:
+                                </span>
+                                <span class="font-bold text-slate-900" id="detail-responded">10</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2 font-medium">
+                                    <span class="w-3 h-3 rounded-full bg-slate-300 inline-block"></span> Aguardando / Não Respondidos:
+                                </span>
+                                <span class="font-bold text-slate-900" id="detail-unanswered">30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Feedbacks Detalhados -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-comments text-[#004B87]"></i> Comentários e Respostas Detalhadas
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <select id="filter-score" onchange="renderResponsesTable()" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004B87]">
+                            <option value="all">Todas as notas</option>
+                            <option value="promoter">Promotores (9-10)</option>
+                            <option value="neutral">Neutros (7-8)</option>
+                            <option value="detractor">Detratores (0-6)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3 px-6 font-semibold">Cliente</th>
+                                <th class="py-3 px-6 font-semibold">Empresa</th>
+                                <th class="py-3 px-6 font-semibold text-center">Nota</th>
+                                <th class="py-3 px-6 font-semibold">Comentário</th>
+                                <th class="py-3 px-6 font-semibold">Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="responses-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <p>© 2026 AF Datalink — Excelência em Cabos e Conexões. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- Lógica da Aplicação -->
+    <script>
+        let selectedScore = null;
+        let responses = JSON.parse(localStorage.getItem('datalink_nps_responses')) || [
+            { name: "Carlos Silva", email: "carlos@audiopro.com.br", company: "ÁudioPro Estúdios", score: 10, comment: "Cabos multipar impecáveis! Durabilidade excelente em turnês.", date: "16/06/2026" },
+            { name: "Mariana Souza", email: "mariana@locacaosom.com", company: "MS Iluminação e Som", score: 9, comment: "Ótimo atendimento e entrega rápida. O cabo coaxial é o melhor do mercado.", date: "15/06/2026" },
+            { name: "Roberto Mendes", email: "roberto@integrador.net", company: "NetConnect Projetos", score: 7, comment: "Produtos muito bons, mas o prazo de frete para o Nordeste poderia ser mais ágil.", date: "14/06/2026" },
+            { name: "Juliana Ribeiro", email: "juliana@estudiorecord.com", company: "Record Rec.", score: 8, comment: "Excelente isolamento nos cabos de áudio balanceado.", date: "12/05/2026" },
+            { name: "Fernando Alves", email: "fernando@somtotal.com.br", company: "Som Total Eventos", score: 10, comment: "Qualidade superior de blindagem e conectores.", date: "20/05/2026" },
+            { name: "Patricia Lima", email: "patricia@cinevideo.com", company: "CineVídeo Produtora", score: 10, comment: "Entrega antes do prazo e suporte técnico nota 10.", date: "08/05/2026" },
+            { name: "Marcos Vinicius", email: "marcos@stagelight.com.br", company: "Stage Light", score: 4, comment: "Tive problemas com o estoque de um conector específico na última compra.", date: "10/04/2026" },
+            { name: "Ricardo Gomes", email: "ricardo@tecaudio.com.br", company: "TecAudio", score: 9, comment: "Excelente custo-benefício para locadoras.", date: "18/04/2026" },
+            { name: "Ana Paula", email: "ana@broadcast.tv", company: "Broadcast HD", score: 10, comment: "Parceiro indispensável para nossas transmissões ao vivo!", date: "15/03/2026" },
+            { name: "Lucas Martins", email: "lucas@arenaeventos.com", company: "Arena Eventos", score: 10, comment: "Cabos resistentes ao uso intenso em palco.", date: "22/03/2026" }
+        ];
+
+        let npsChartInstance = null;
+        let monthlyChartInstance = null;
+        let responsePieChartInstance = null;
+        let totalEmailsSent = parseInt(localStorage.getItem('datalink_emails_sent'), 10) || 40;
+
+        window.onload = function() {
+            document.getElementById('input-emails-sent').value = totalEmailsSent;
+            renderScoreButtons();
+            updateDashboard();
+        };
+
+        function switchView(view) {
+            const surveyView = document.getElementById('view-survey');
+            const adminView = document.getElementById('view-admin');
+            const navSurvey = document.getElementById('nav-survey');
+            const navAdmin = document.getElementById('nav-admin');
+
+            if (view === 'survey') {
+                surveyView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                navSurvey.className = "px-4 py-2 rounded-lg transition-all bg-white text-[#004B87] shadow-sm font-medium cursor-pointer";
+                navAdmin.className = "px-4 py-2 rounded-lg transition-all text-slate-600 hover:text-slate-900 font-medium cursor-pointer";
+            } else {
+                surveyView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                navAdmin.className = "px-4 py-2 rounded-lg transition-all bg-white text-[#004B87] shadow-sm font-medium cursor-pointer";
+                navSurvey.className = "px-4 py-2 rounded-lg transition-all text-slate-600 hover:text-slate-900 font-medium cursor-pointer";
+                updateDashboard();
+            }
+        }
+
+        function renderScoreButtons() {
+            const container = document.getElementById('score-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `score-btn py-3 rounded-xl font-bold text-base border transition-all cursor-pointer ${
+                    selectedScore === i 
+                        ? 'bg-[#004B87] text-white border-[#004B87] ring-2 ring-blue-300 shadow-md scale-105' 
+                        : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100 hover:border-slate-400'
+                }`;
+                btn.innerText = i;
+                btn.onclick = () => selectScore(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function selectScore(score) {
+            selectedScore = score;
+            renderScoreButtons();
+
+            const label = document.getElementById('feedback-label');
+            if (score <= 6) {
+                label.innerText = "Sentimos muito! O que faltou ou qual foi o principal problema que você enfrentou?";
+            } else if (score <= 8) {
+                label.innerText = "O que faltou para que sua nota fosse 9 ou 10?";
+            } else {
+                label.innerText = "Que ótimo! O que você mais gosta nos cabos e produtos da Datalink?";
+            }
+        }
+
+        function submitSurvey(e) {
+            e.preventDefault();
+
+            if (selectedScore === null) {
+                showToast("Por favor, selecione uma nota de 0 a 10.");
+                return;
+            }
+
+            const name = document.getElementById('resp-name').value;
+            const email = document.getElementById('resp-email').value;
+            const company = document.getElementById('resp-company').value || "Não informada";
+            const comment = document.getElementById('resp-comment').value || "Sem comentário adicional.";
+            
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('pt-BR');
+
+            const newResponse = { name, email, company, score: selectedScore, comment, date: dateStr };
+            responses.unshift(newResponse);
+
+            localStorage.setItem('datalink_nps_responses', JSON.stringify(responses));
+
+            document.getElementById('nps-form').classList.add('hidden');
+            document.getElementById('success-screen').classList.remove('hidden');
+            showToast("Avaliação enviada com sucesso!");
+        }
+
+        function resetSurvey() {
+            document.getElementById('nps-form').reset();
+            selectedScore = null;
+            renderScoreButtons();
+            document.getElementById('success-screen').classList.add('hidden');
+            document.getElementById('nps-form').classList.remove('hidden');
+            document.getElementById('feedback-label').innerText = "Tem algo que você esperava que fizéssemos, mas ainda não oferecemos? / Deixe seu comentário:";
+        }
+
+        function updateDashboard() {
+            const total = responses.length;
+            document.getElementById('stat-total').innerText = total;
+
+            if (total === 0) {
+                document.getElementById('stat-nps').innerText = "0";
+                document.getElementById('stat-zone').innerText = "Sem dados";
+                document.getElementById('stat-promoters').innerText = "0%";
+                document.getElementById('stat-detractors').innerText = "0%";
+                document.getElementById('sacp-alert-banner').classList.add('hidden');
+                renderResponsesTable();
+                renderChart([0,0,0,0,0,0,0,0,0,0,0], 0);
+                renderMonthlyChart();
+                renderResponseRatePieChart();
+                return;
+            }
+
+            let promoters = responses.filter(r => r.score >= 9).length;
+            let neutrals = responses.filter(r => r.score === 7 || r.score === 8).length;
+            let detractors = responses.filter(r => r.score <= 6).length;
+
+            const pctProm = Math.round((promoters / total) * 100);
+            const pctNeut = Math.round((neutrals / total) * 100);
+            const pctDet = Math.round((detractors / total) * 100);
+
+            const npsScore = pctProm - pctDet;
+
+            document.getElementById('stat-nps').innerText = (npsScore > 0 ? "+" : "") + npsScore;
+            
+            const sacpBanner = document.getElementById('sacp-alert-banner');
+            const sacpIconBox = document.getElementById('sacp-icon-box');
+            const sacpTitle = document.getElementById('sacp-title');
+            const sacpDesc = document.getElementById('sacp-desc');
+            const sacpBadge = document.getElementById('sacp-badge');
+
+            sacpBanner.classList.remove('hidden');
+            if (npsScore < 80) {
+                sacpBanner.className = "rounded-2xl p-5 border border-red-200 bg-red-50/90 text-red-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm transition-all";
+                sacpIconBox.className = "w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0";
+                sacpIconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                sacpTitle.innerText = `Alerta de Qualidade: NPS (${npsScore} pts) Abaixo da Meta de 80 Pontos`;
+                sacpDesc.innerHTML = `Como o resultado está abaixo da meta estabelecida de <strong>80 pontos</strong>, é necessário <strong>abrir uma SACP (Solicitação de Ação Corretiva e Preventiva)</strong> para investigar as causas dos detratores/neutros e implementar ações de melhoria.`;
+                sacpBadge.className = "px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-red-600 text-white shadow-sm shrink-0";
+                sacpBadge.innerText = "Ação Obrigatória: Abrir SACP";
+            } else {
+                sacpBanner.className = "rounded-2xl p-5 border border-emerald-200 bg-emerald-50/90 text-emerald-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm transition-all";
+                sacpIconBox.className = "w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0";
+                sacpIconBox.innerHTML = '<i class="fa-solid fa-award"></i>';
+                sacpTitle.innerText = `Meta Atingida: NPS (${npsScore} pts) dentro do Padrão de Excelência`;
+                sacpDesc.innerHTML = `O índice atual atende ou supera a meta de <strong>80 pontos</strong>. Não há necessidade de abertura de SACP no momento.`;
+                sacpBadge.className = "px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white shadow-sm shrink-0";
+                sacpBadge.innerText = "Meta Atingida (≥ 80)";
+            }
+
+            let zoneText = "Zona de Aperfeiçoamento";
+            let zoneClass = "text-amber-700 bg-amber-50";
+            if (npsScore >= 80) { zoneText = "Meta Atingida (Excelência)"; zoneClass = "text-emerald-700 bg-emerald-50"; }
+            else if (npsScore >= 75) { zoneText = "Excelência (Abaixo da Meta 80)"; zoneClass = "text-amber-700 bg-amber-50"; }
+            else if (npsScore >= 50) { zoneText = "Zona de Qualidade (Abrir SACP)"; zoneClass = "text-orange-700 bg-orange-50"; }
+            else if (npsScore < 0) { zoneText = "Zona Crítica (Abrir SACP)"; zoneClass = "text-red-700 bg-red-50"; }
+
+            const zoneEl = document.getElementById('stat-zone');
+            zoneEl.innerText = zoneText;
+            zoneEl.className = `text-xs font-semibold mt-4 px-2.5 py-1 rounded-md inline-block w-fit ${zoneClass}`;
+
+            document.getElementById('stat-promoters').innerText = pctProm + "%";
+            document.getElementById('stat-detractors').innerText = pctDet + "%";
+
+            document.getElementById('pct-prom').innerText = pctProm + "%";
+            document.getElementById('bar-prom').style.width = pctProm + "%";
+
+            document.getElementById('pct-neut').innerText = pctNeut + "%";
+            document.getElementById('bar-neut').style.width = pctNeut + "%";
+
+            document.getElementById('pct-det').innerText = pctDet + "%";
+            document.getElementById('bar-det').style.width = pctDet + "%";
+
+            let counts = Array(11).fill(0);
+            responses.forEach(r => counts[r.score]++);
+
+            renderChart(counts, npsScore);
+            renderMonthlyChart();
+            renderResponseRatePieChart();
+            renderResponsesTable();
+        }
+
+        function renderChart(counts, currentNps = 0) {
+            const ctx = document.getElementById('npsChart').getContext('2d');
+            if (npsChartInstance) {
+                npsChartInstance.destroy();
+            }
+
+            npsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    datasets: [
+                        {
+                            label: 'Quantidade de Notas',
+                            data: counts,
+                            yAxisID: 'y',
+                            backgroundColor: function(context) {
+                                const index = context.dataIndex;
+                                if (index <= 6) return '#ef4444';
+                                if (index <= 8) return '#f59e0b';
+                                return '#10b981';
+                            },
+                            borderRadius: 6
+                        },
+                        {
+                            type: 'line',
+                            label: 'NPS Atual',
+                            data: Array(11).fill(currentNps),
+                            yAxisID: 'y1',
+                            borderColor: '#004B87',
+                            backgroundColor: '#004B87',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 11 } }
+                        },
+                        annotation: {
+                            annotations: {
+                                metaLine: {
+                                    type: 'line',
+                                    yScaleID: 'y1',
+                                    yMin: 80,
+                                    yMax: 80,
+                                    borderColor: '#dc2626',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        display: true,
+                                        content: 'META: 80 PTS (Abaixo = Abrir SACP)',
+                                        position: 'end',
+                                        backgroundColor: '#dc2626',
+                                        color: '#ffffff',
+                                        font: { size: 10, weight: 'bold' },
+                                        padding: 4,
+                                        borderRadius: 4
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            title: { display: true, text: 'Respostas', font: { size: 11 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            min: -100,
+                            max: 100,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Pontuação NPS', font: { size: 11 } }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderMonthlyChart() {
+            const ctx = document.getElementById('monthlyNpsChart').getContext('2d');
+            if (monthlyChartInstance) {
+                monthlyChartInstance.destroy();
+            }
+
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const groupedByMonth = {};
+
+            responses.forEach(r => {
+                const parts = (r.date || '').split('/');
+                if (parts.length === 3) {
+                    const monthIdx = parseInt(parts[1], 10) - 1;
+                    const year = parts[2];
+                    const sortKey = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+                    const label = `${monthNames[monthIdx]}/${year.slice(-2)}`;
+
+                    if (!groupedByMonth[sortKey]) {
+                        groupedByMonth[sortKey] = { label, total: 0, promoters: 0, detractors: 0 };
+                    }
+                    groupedByMonth[sortKey].total++;
+                    if (r.score >= 9) groupedByMonth[sortKey].promoters++;
+                    else if (r.score <= 6) groupedByMonth[sortKey].detractors++;
+                }
+            });
+
+            const sortedKeys = Object.keys(groupedByMonth).sort();
+            const labels = sortedKeys.map(k => groupedByMonth[k].label);
+            const monthlyScores = sortedKeys.map(k => {
+                const item = groupedByMonth[k];
+                const pctProm = (item.promoters / item.total) * 100;
+                const pctDet = (item.detractors / item.total) * 100;
+                return Math.round(pctProm - pctDet);
+            });
+            const monthlyTotals = sortedKeys.map(k => groupedByMonth[k].total);
+
+            monthlyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Sem dados'],
+                    datasets: [
+                        {
+                            label: 'NPS Mensal',
+                            data: monthlyScores.length ? monthlyScores : [0],
+                            borderColor: '#004B87',
+                            backgroundColor: 'rgba(0, 75, 135, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: monthlyScores.map(score => score < 80 ? '#dc2626' : '#10b981'),
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const score = context.parsed.y;
+                                    const count = monthlyTotals[context.dataIndex] || 0;
+                                    const status = score < 80 ? '⚠️ Abaixo da meta (Abrir SACP)' : '✅ Meta atingida';
+                                    return [`NPS: ${score} pts (${count} resp.)`, status];
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                metaLineMonthly: {
+                                    type: 'line',
+                                    yMin: 80,
+                                    yMax: 80,
+                                    borderColor: '#dc2626',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        display: true,
+                                        content: 'META: 80 PTS (Abaixo = Abrir SACP)',
+                                        position: 'start',
+                                        backgroundColor: '#dc2626',
+                                        color: '#ffffff',
+                                        font: { size: 10, weight: 'bold' },
+                                        padding: 4,
+                                        borderRadius: 4
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: -100,
+                            max: 100,
+                            title: { display: true, text: 'Pontuação NPS', font: { size: 11 } },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateEmailsSent() {
+            const input = document.getElementById('input-emails-sent');
+            let val = parseInt(input.value, 10);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val < responses.length) {
+                val = responses.length;
+                input.value = val;
+                showToast("Ajustado para o mínimo de pesquisas já respondidas.");
+            } else {
+                showToast("Quantidade de e-mails enviados atualizada!");
+            }
+            totalEmailsSent = val;
+            localStorage.setItem('datalink_emails_sent', totalEmailsSent);
+            renderResponseRatePieChart();
+        }
+
+        function renderResponseRatePieChart() {
+            const ctx = document.getElementById('responseRatePieChart').getContext('2d');
+            if (responsePieChartInstance) {
+                responsePieChartInstance.destroy();
+            }
+
+            const responded = responses.length;
+            const sent = Math.max(totalEmailsSent, responded);
+            const unanswered = Math.max(0, sent - responded);
+            const rate = sent > 0 ? Math.round((responded / sent) * 100) : 0;
+
+            document.getElementById('stat-emails-sent').innerText = sent;
+            document.getElementById('stat-response-rate').innerText = rate + "%";
+            document.getElementById('detail-responded').innerText = `${responded} (${rate}%)`;
+            document.getElementById('detail-unanswered').innerText = `${unanswered} (${sent > 0 ? 100 - rate : 0}%)`;
+
+            responsePieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pesquisas Respondidas', 'E-mails Não Respondidos'],
+                    datasets: [{
+                        data: [responded, unanswered],
+                        backgroundColor: ['#004B87', '#cbd5e1'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 12 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const pct = sent > 0 ? Math.round((value / sent) * 100) : 0;
+                                    return ` ${context.label}: ${value} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderResponsesTable() {
+            const tbody = document.getElementById('responses-table-body');
+            const filter = document.getElementById('filter-score') ? document.getElementById('filter-score').value : 'all';
+            tbody.innerHTML = '';
+
+            let filtered = responses.filter(r => {
+                if (filter === 'promoter') return r.score >= 9;
+                if (filter === 'neutral') return r.score === 7 || r.score === 8;
+                if (filter === 'detractor') return r.score <= 6;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Nenhum registro encontrado com este filtro.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(r => {
+                let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                if (r.score <= 6) badgeColor = 'bg-red-100 text-red-800 border-red-200';
+                else if (r.score <= 8) badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-all";
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-medium text-slate-900">
+                        ${r.name}
+                        <div class="text-xs text-slate-400 font-normal">${r.email}</div>
+                    </td>
+                    <td class="py-4 px-6 text-slate-600">${r.company}</td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">
+                            ${r.score}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-slate-600 max-w-xs truncate" title="${r.comment}">${r.comment}</td>
+                    <td class="py-4 px-6 text-slate-400 text-xs">${r.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetData() {
+            responses = [];
+            localStorage.setItem('datalink_nps_responses', JSON.stringify(responses));
+            updateDashboard();
+            showToast("Todos os dados foram limpos.");
+        }
+
+        function loadDemoData() {
+            responses = [
+                { name: "Carlos Silva", email: "carlos@audiopro.com.br", company: "ÁudioPro Estúdios", score: 10, comment: "Cabos multipar impecáveis! Durabilidade excelente em turnês.", date: "16/06/2026" },
+                { name: "Mariana Souza", email: "mariana@locacaosom.com", company: "MS Iluminação e Som", score: 9, comment: "Ótimo atendimento e entrega rápida. O cabo coaxial é o melhor do mercado.", date: "15/06/2026" },
+                { name: "Roberto Mendes", email: "roberto@integrador.net", company: "NetConnect Projetos", score: 7, comment: "Produtos muito bons, mas o prazo de frete para o Nordeste poderia ser mais ágil.", date: "14/06/2026" },
+                { name: "Juliana Ribeiro", email: "juliana@estudiorecord.com", company: "Record Rec.", score: 8, comment: "Excelente isolamento nos cabos de áudio balanceado.", date: "12/05/2026" },
+                { name: "Fernando Alves", email: "fernando@somtotal.com.br", company: "Som Total Eventos", score: 10, comment: "Qualidade superior de blindagem e conectores.", date: "20/05/2026" },
+                { name: "Patricia Lima", email: "patricia@cinevideo.com", company: "CineVídeo Produtora", score: 10, comment: "Entrega antes do prazo e suporte técnico nota 10.", date: "08/05/2026" },
+                { name: "Marcos Vinicius", email: "marcos@stagelight.com.br", company: "Stage Light", score: 4, comment: "Tive problemas com o estoque de um conector específico na última compra.", date: "10/04/2026" },
+                { name: "Ricardo Gomes", email: "ricardo@tecaudio.com.br", company: "TecAudio", score: 9, comment: "Excelente custo-benefício para locadoras.", date: "18/04/2026" },
+                { name: "Ana Paula", email: "ana@broadcast.tv", company: "Broadcast HD", score: 10, comment: "Parceiro indispensável para nossas transmissões ao vivo!", date: "15/03/2026" },
+                { name: "Lucas Martins", email: "lucas@arenaeventos.com", company: "Arena Eventos", score: 10, comment: "Cabos resistentes ao uso intenso em palco.", date: "22/03/2026" }
+            ];
+            totalEmailsSent = 40;
+            document.getElementById('input-emails-sent').value = totalEmailsSent;
+            localStorage.setItem('datalink_emails_sent', totalEmailsSent);
+            localStorage.setItem('datalink_nps_responses', JSON.stringify(responses));
+            updateDashboard();
+            showToast("Dados de demonstração carregados!");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
